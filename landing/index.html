@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plasma — le chat de la communauté</title>
+<meta name="description" content="Plasma, un chat temps réel. Même interface que Discord, et gratuit pour ce que Discord fait payer.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%238a79ff'/><circle cx='12' cy='12' r='3' fill='white'/><circle cx='20' cy='12' r='3' fill='white'/></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --fond:#131315; --carte:#18181c; --carte-2:#1e1e24;
+  --bordure:#26262e; --bordure-2:#33333d;
+  --txt:#f0efec; --txt-doux:#9195a3; --txt-faible:#63666f;
+  --accent:#8a79ff; --accent-clair:#a394ff; --accent-sombre:#6b5bf5;
+  --voile:#241f3d; --ok:#3dd68c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--fond); color:var(--txt);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  min-height:100vh; overflow-x:hidden;
+}
+h1,h2,h3,.logo{font-family:'Outfit','Inter',sans-serif}
+
+/* les halos du fond */
+body::before,body::after{
+  content:"";position:fixed;border-radius:50%;pointer-events:none;z-index:0;
+  filter:blur(110px);opacity:.5;
+}
+body::before{width:640px;height:640px;background:#6b5bf5;top:-260px;right:-180px;}
+body::after{width:520px;height:520px;background:#3d2f7a;bottom:-280px;left:-160px;}
+
+.graine{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.22;
+  background-image:radial-gradient(rgba(255,255,255,.20) 1px, transparent 1px);
+  background-size:26px 26px;}
+
+.page{position:relative;z-index:2;max-width:1000px;margin:0 auto;padding:0 24px}
+
+/* ── l'en-tête ── */
+header{display:flex;align-items:center;gap:11px;padding:28px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.03em}
+.logo .brique{
+  width:32px;height:32px;border-radius:9px;flex:none;position:relative;
+  background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
+  box-shadow:0 5px 18px rgba(138,121,255,.4);
+}
+.logo .brique::before,.logo .brique::after{
+  content:"";position:absolute;width:8px;height:8px;border-radius:2px;
+  background:rgba(255,255,255,.92);top:7px;
+}
+.logo .brique::before{left:6px} .logo .brique::after{right:6px}
+.logo span{color:var(--accent-clair)}
+header nav{margin-left:auto;display:flex;gap:9px;align-items:center}
+header nav a{
+  color:var(--txt-doux);text-decoration:none;font-size:14px;font-weight:500;
+  padding:8px 13px;border-radius:10px;transition:.15s;
+}
+header nav a:hover{color:var(--txt);background:var(--carte)}
+
+/* ── le héros ── */
+.heros{padding:64px 0 72px;text-align:center}
+.pastille{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--carte);border:1px solid var(--bordure);
+  border-radius:999px;padding:7px 15px;font-size:13px;color:var(--txt-doux);
+  margin-bottom:26px;
+}
+.pastille .point{width:7px;height:7px;border-radius:50%;background:var(--ok);
+  box-shadow:0 0 10px var(--ok)}
+.heros h1{
+  font-size:clamp(38px,7vw,68px);font-weight:800;letter-spacing:-.045em;
+  line-height:1.03;margin-bottom:22px;
+}
+.heros h1 em{
+  font-style:normal;
+  background:linear-gradient(120deg,var(--accent-clair),var(--accent));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.heros p{
+  font-size:clamp(16px,2.2vw,19px);color:var(--txt-doux);
+  max-width:600px;margin:0 auto 38px;
+}
+.boutons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.bouton{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:15px 30px;border-radius:14px;font-size:16px;font-weight:700;
+  font-family:'Outfit',sans-serif;text-decoration:none;transition:.16s;
+}
+.bouton.plein{
+  background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
+  color:#fff;box-shadow:0 10px 34px rgba(138,121,255,.36);
+}
+.bouton.plein:hover{transform:translateY(-2px);box-shadow:0 14px 42px rgba(138,121,255,.48)}
+.bouton.creux{
+  background:var(--carte);color:var(--txt);border:1px solid var(--bordure);
+}
+.bouton.creux:hover{border-color:var(--bordure-2);background:var(--carte-2)}
+
+/* ── le tableau comparatif ── */
+.section{padding:56px 0}
+.section > h2{
+  font-size:clamp(26px,4vw,36px);font-weight:800;letter-spacing:-.03em;
+  text-align:center;margin-bottom:10px;
+}
+.section > .sous{
+  text-align:center;color:var(--txt-doux);margin-bottom:40px;font-size:16px;
+}
+.tableau{
+  background:var(--carte);border:1px solid var(--bordure);border-radius:20px;
+  overflow:hidden;
+}
+.ligne-tete{
+  display:grid;grid-template-columns:1fr 130px 130px;
+  padding:15px 24px;border-bottom:1px solid var(--bordure);
+  font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--txt-faible);
+}
+.ligne-tete .nous{color:var(--accent-clair)}
+.ligne{
+  display:grid;grid-template-columns:1fr 130px 130px;
+  padding:17px 24px;border-bottom:1px solid var(--bordure);
+  align-items:center;transition:.14s;
+}
+.ligne:last-child{border-bottom:none}
+.ligne:hover{background:rgba(255,255,255,.018)}
+.ligne .quoi{font-weight:600;font-size:15px}
+.ligne .eux{color:var(--txt-doux);font-size:14px}
+.ligne .nous{font-size:15px;font-weight:700;color:var(--accent-clair)}
+.ligne .nous .gratuit{
+  font-size:10.5px;background:rgba(61,214,140,.13);color:var(--ok);
+  border-radius:5px;padding:2px 6px;margin-left:6px;font-weight:600;
+  letter-spacing:.03em;
+}
+
+/* ── les cartes de fonctionnalités ── */
+.cartes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.carte{
+  background:var(--carte);border:1px solid var(--bordure);border-radius:16px;
+  padding:22px;transition:.16s;
+}
+.carte:hover{border-color:var(--bordure-2);transform:translateY(-2px)}
+.carte .icone{
+  width:38px;height:38px;border-radius:11px;margin-bottom:14px;
+  background:var(--voile);color:var(--accent-clair);
+  display:flex;align-items:center;justify-content:center;font-size:19px;
+}
+.carte h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.carte p{font-size:14px;color:var(--txt-doux);line-height:1.55}
+
+/* ── le pied ── */
+footer{
+  padding:44px 0 56px;text-align:center;border-top:1px solid var(--bordure);
+  margin-top:40px;color:var(--txt-faible);font-size:13px;
+}
+footer a{color:var(--txt-doux);text-decoration:none;margin:0 9px}
+footer a:hover{color:var(--accent-clair)}
+
+@media (max-width:620px){
+  .ligne-tete,.ligne{grid-template-columns:1fr 84px 84px;padding:14px 16px;font-size:13px}
+  .ligne-tete{font-size:10px}
+  .ligne .nous .gratuit{display:none}
+  .heros{padding:40px 0 52px}
+}
+</style>
+</head>
+<body>
+<div class="graine"></div>
+
+<div class="page">
+  <header>
+    <div class="logo"><div class="brique"></div>PLAS<span>MA</span></div>
+    <nav>
+      <a href="https://github.com/furaxdev/plasma-chat">GitHub</a>
+      <a href="#gratuit">Ce qui est gratuit</a>
+    </nav>
+  </header>
+
+  <section class="heros">
+    <div class="pastille"><span class="point"></span>en ligne</div>
+    <h1>Le chat de la communauté,<br><em>sans les péages.</em></h1>
+    <p>
+      Même interface que Discord, la nôtre en couleur. Et gratuit pour tout
+      ce que Discord fait payer.
+    </p>
+    <div class="boutons">
+      <a class="bouton plein" id="ouvrir" href="https://plasma-chat.onrender.com">
+        Ouvrir Plasma
+      </a>
+      <a class="bouton creux" href="https://github.com/furaxdev/plasma-chat">
+        Voir le code
+      </a>
+    </div>
+  </section>
+
+  <section class="section" id="gratuit">
+    <h2>Ce que Discord fait payer</h2>
+    <p class="sous">Ici, tout le monde a les mêmes droits.</p>
+
+    <div class="tableau">
+      <div class="ligne-tete">
+        <div>Fonction</div><div>Discord</div><div class="nous">Plasma</div>
+      </div>
+      <div class="ligne">
+        <div class="quoi">Longueur d'un message</div>
+        <div class="eux">2 000</div>
+        <div class="nous">4 000<span class="gratuit">doublé</span></div>
+      </div>
+      <div class="ligne">
+        <div class="quoi">Taille d'un fichier</div>
+        <div class="eux">25 Mo</div>
+        <div class="nous">500 Mo<span class="gratuit">×20</span></div>
+      </div>
+      <div class="ligne">
+        <div class="quoi">Couleur de son pseudo</div>
+        <div class="eux">Nitro</div>
+        <div class="nous">gratuit<span class="gratuit">libre</span></div>
+      </div>
+      <div class="ligne">
+        <div class="quoi">Bannière de profil</div>
+        <div class="eux">Nitro</div>
+        <div class="nous">gratuit<span class="gratuit">libre</span></div>
+      </div>
+      <div class="ligne">
+        <div class="quoi">Réactions</div>
+        <div class="eux">limitées</div>
+        <div class="nous">toutes</div>
+      </div>
+      <div class="ligne">
+        <div class="quoi">Thème de l'interface</div>
+        <div class="eux">Nitro</div>
+        <div class="nous">gratuit</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Comment c'est fait</h2>
+    <p class="sous">Simple, et pas de dépendance inutile.</p>
+    <div class="cartes">
+      <div class="carte">
+        <div class="icone">{ }</div>
+        <h3>Temps réel</h3>
+        <p>WebSocket. Un message arrive chez les autres sans recharger la page.</p>
+      </div>
+      <div class="carte">
+        <div class="icone">◇</div>
+        <h3>Une seule dépendance</h3>
+        <p>Pas de framework, pas de base de données à installer. Un fichier, ça tourne.</p>
+      </div>
+      <div class="carte">
+        <div class="icone">✓</div>
+        <h3>42 tests</h3>
+        <p>Chaque fonction est vérifiée automatiquement avant d'être livrée.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      <a href="https://github.com/furaxdev/plasma-chat">GitHub</a>
+      <a href="https://furaxdev.github.io/artifacts/studforge.html">Studforge</a>
+      <a href="https://nexazai.vercel.app">NexazAI</a>
+    </div>
+    <p style="margin-top:14px">Fait par FuraxDev</p>
+  </footer>
+</div>
+</body>
+</html>
