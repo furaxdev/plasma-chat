@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: plasma-chat
+    name: plasma-chat-serveur
     runtime: node
     plan: free
     region: frankfurt
