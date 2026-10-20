@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plasma</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%238a79ff'/><circle cx='12' cy='12' r='3' fill='white'/><circle cx='20' cy='12' r='3' fill='white'/></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ══════════════════════════════════════════════════════════════
+   PLASMA — la STRUCTURE est celle de Discord, mot pour mot :
+   rail de serveurs · colonne de canaux · chat · liste des membres ·
+   zone de saisie · barre d'utilisateur en bas à gauche.
+
+   La DA, elle, est à nous : fond #131315, accent violet #8a79ff,
+   Outfit pour les titres, Inter pour le texte, bords plus ronds,
+   aucune couleur ni police de Discord.
+   ══════════════════════════════════════════════════════════════ */
+:root{
+  --fond:#131315;
+  --rail:#0c0c0f;
+  --canaux:#18181c;
+  --chat:#131315;
+  --membres:#18181c;
+  --entete:#17171b;
+  --saisie:#1e1e24;
+  --bordure:#26262e;
+  --bordure-2:#33333d;
+  --txt:#f0efec;
+  --txt-2:#b6b8c2;
+  --txt-doux:#9195a3;
+  --txt-faible:#63666f;
+  --accent:#8a79ff;
+  --accent-clair:#a394ff;
+  --accent-sombre:#6b5bf5;
+  --voile:#241f3d;
+  --hover:#1e1e24;
+  --actif:#26242f;
+  --ok:#3dd68c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--fond);color:var(--txt);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:15px;overflow:hidden;-webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.nom-serveur,.titre-canal,.groupe-categorie{font-family:'Outfit','Inter',sans-serif}
+
+/* ─────────── la grille : 4 colonnes ─────────── */
+.app{display:flex;height:100vh}
+
+/* ══ 1. RAIL DES SERVEURS ══ */
+.rail{
+  width:76px;flex:none;background:var(--rail);
+  display:flex;flex-direction:column;align-items:center;
+  padding:12px 0;gap:8px;
+}
+.serveur{
+  width:48px;height:48px;border-radius:16px;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;
+  background:var(--saisie);color:var(--txt);cursor:pointer;
+  transition:border-radius .18s, background .18s;position:relative;
+}
+.serveur:hover{border-radius:14px;background:var(--accent-sombre)}
+.serveur.actif{
+  border-radius:14px;
+  background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
+  box-shadow:0 4px 16px rgba(138,121,255,.32);
+}
+.serveur.actif::before{
+  content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);
+  width:4px;height:26px;border-radius:0 4px 4px 0;background:#fff;
+}
+.rail .sep{width:32px;height:2px;border-radius:2px;background:var(--bordure);margin:4px 0}
+.rail .plus{color:var(--ok);font-size:24px;font-weight:400}
+
+/* ══ 2. COLONNE DES CANAUX ══ */
+.canaux{
+  width:242px;flex:none;background:var(--canaux);
+  display:flex;flex-direction:column;border-right:1px solid var(--bordure);
+}
+.entete-serveur{
+  height:50px;flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;border-bottom:1px solid var(--bordure);
+  box-shadow:0 1px 0 rgba(0,0,0,.25);
+}
+.nom-serveur{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.chevron{color:var(--txt-doux);font-size:12px;margin-left:6px}
+
+.liste-canaux{flex:1;overflow-y:auto;padding:14px 8px 8px}
+.liste-canaux::-webkit-scrollbar{width:6px}
+.liste-canaux::-webkit-scrollbar-thumb{background:var(--bordure-2);border-radius:9px}
+
+.groupe-categorie{
+  font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt-faible);padding:8px 8px 6px;
+}
+.canal{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;border-radius:8px;margin-bottom:2px;
+  color:var(--txt-doux);font-size:15px;font-weight:500;cursor:pointer;
+  transition:.13s;
+}
+.canal:hover{background:var(--hover);color:var(--txt-2)}
+.canal.actif{background:var(--actif);color:var(--txt)}
+.canal .diese{color:var(--txt-faible);font-size:19px;line-height:1;font-weight:400}
+.canal.actif .diese{color:var(--txt-doux)}
+.canal.non-lu{color:var(--txt);font-weight:600}
+.canal.non-lu::after{
+  content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--accent);
+}
+
+/* la barre d'utilisateur, en bas à gauche */
+.moi{
+  flex:none;height:56px;background:var(--rail);
+  display:flex;align-items:center;gap:9px;padding:0 10px;
+}
+.avatar{
+  width:32px;height:32px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;color:#fff;
+  position:relative;
+}
+.avatar.gros{width:40px;height:40px;font-size:16px}
+.avatar .point{
+  position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;
+  border-radius:50%;background:var(--ok);border:2.5px solid var(--rail);
+}
+.moi .qui{min-width:0;flex:1}
+.moi .pseudo{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.moi .statut{font-size:12px;color:var(--txt-doux)}
+
+/* ══ 3. LE CHAT ══ */
+.chat{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--chat)}
+.entete-canal{
+  height:50px;flex:none;display:flex;align-items:center;gap:9px;
+  padding:0 18px;border-bottom:1px solid var(--bordure);
+  box-shadow:0 1px 0 rgba(0,0,0,.2);background:var(--entete);
+}
+.titre-canal{font-size:16px;font-weight:700;display:flex;align-items:center;gap:7px}
+.titre-canal .diese{color:var(--txt-faible);font-size:21px}
+.entete-canal .sous{color:var(--txt-doux);font-size:13px;
+  padding-left:12px;margin-left:6px;border-left:1px solid var(--bordure-2)}
+.entete-canal .outils{margin-left:auto;display:flex;gap:5px;color:var(--txt-doux)}
+.entete-canal .outils span{
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;transition:.13s;
+}
+.entete-canal .outils span:hover{background:var(--hover);color:var(--txt)}
+
+.flux{flex:1;overflow-y:auto;padding:18px 0 8px}
+.flux::-webkit-scrollbar{width:8px}
+.flux::-webkit-scrollbar-thumb{background:var(--bordure-2);border-radius:9px}
+
+.debut{
+  padding:14px 18px 18px;border-bottom:1px solid var(--bordure);margin-bottom:10px;
+}
+.debut .rond{
+  width:68px;height:68px;border-radius:50%;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:30px;color:#fff;
+  box-shadow:0 8px 26px rgba(138,121,255,.3);
+}
+.debut h2{font-size:29px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px}
+.debut p{color:var(--txt-doux);font-size:15px;line-height:1.5}
+
+.msg{
+  display:flex;gap:14px;padding:3px 18px;position:relative;
+}
+.msg:hover{background:rgba(255,255,255,.022)}
+.msg.groupe{margin-top:14px}
+.msg .corps{min-width:0;flex:1}
+.msg .ligne{display:flex;align-items:baseline;gap:9px;margin-bottom:2px}
+.msg .auteur{font-weight:600;font-size:15px}
+.msg .heure{font-size:11px;color:var(--txt-faible)}
+.msg .texte{
+  color:var(--txt-2);font-size:15px;line-height:1.45;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.msg .texte .mention{
+  background:var(--voile);color:var(--accent-clair);
+  border-radius:5px;padding:0 3px;font-weight:500;
+}
+
+.forme{position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent}
+.msg.groupe .forme{background:transparent}
+
+/* la zone de saisie */
+.zone{flex:none;padding:0 18px 22px}
+.saisie{
+  display:flex;align-items:center;gap:10px;
+  background:var(--saisie);border:1px solid var(--bordure);
+  border-radius:14px;padding:11px 14px;transition:.15s;
+}
+.saisie:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--voile)}
+.saisie input{
+  flex:1;background:none;border:none;outline:none;
+  color:var(--txt);font-size:15px;font-family:inherit;min-width:0;
+}
+.saisie input::placeholder{color:var(--txt-faible)}
+.saisie .rond-btn{
+  width:30px;height:30px;border-radius:50%;flex:none;border:none;
+  background:var(--accent);color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.14s;
+}
+.saisie .rond-btn:hover{background:var(--accent-clair)}
+
+/* ══ 4. LISTE DES MEMBRES ══ */
+.membres{
+  width:232px;flex:none;background:var(--membres);overflow-y:auto;
+  border-left:1px solid var(--bordure);padding:16px 10px;
+}
+.membres::-webkit-scrollbar{width:6px}
+.membres::-webkit-scrollbar-thumb{background:var(--bordure-2);border-radius:9px}
+.membres h3{
+  font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt-faible);padding:0 8px 9px;
+}
+.membre{
+  display:flex;align-items:center;gap:10px;padding:7px 8px;
+  border-radius:8px;cursor:pointer;transition:.13s;
+}
+.membre:hover{background:var(--hover)}
+.membre .avatar{width:32px;height:32px;font-size:13px}
+.membre .nom{font-size:14px;font-weight:500;color:var(--txt-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.membre .nom.soi{color:var(--txt);font-weight:600}
+
+/* ─────────── écran de connexion ─────────── */
+.voile{
+  position:fixed;inset:0;background:rgba(8,8,12,.86);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;z-index:50;
+}
+.voile.cache{display:none}
+.carte{
+  width:min(420px,calc(100vw - 40px));
+  background:var(--canaux);border:1px solid var(--bordure);
+  border-radius:20px;padding:34px 30px;
+  box-shadow:0 28px 80px rgba(0,0,0,.6);
+}
+.carte .marque{
+  width:60px;height:60px;border-radius:18px;margin:0 auto 20px;
+  background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:27px;color:#fff;
+  box-shadow:0 10px 32px rgba(138,121,255,.38);position:relative;
+}
+.carte h1{font-size:25px;font-weight:800;text-align:center;letter-spacing:-.03em;margin-bottom:7px}
+.carte p{font-size:14px;color:var(--txt-doux);text-align:center;line-height:1.5;margin-bottom:22px}
+.carte input{
+  width:100%;background:var(--saisie);border:1px solid var(--bordure);
+  border-radius:12px;padding:13px 15px;color:var(--txt);
+  font-size:15px;font-family:inherit;outline:none;transition:.15s;margin-bottom:12px;
+}
+.carte input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--voile)}
+.carte button{
+  width:100%;border:none;border-radius:12px;padding:13px;
+  background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
+  color:#fff;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;transition:.15s;box-shadow:0 8px 26px rgba(138,121,255,.3);
+}
+.carte button:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.carte .note{font-size:12px;color:var(--txt-faible);text-align:center;margin-top:14px;margin-bottom:0}
+
+
+/* ─────────── réactions (gratuites, tous les emojis) ─────────── */
+.reactions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.reaction{
+  display:flex;align-items:center;gap:5px;
+  background:var(--saisie);border:1px solid var(--bordure);
+  border-radius:9px;padding:3px 8px;font-size:13px;cursor:pointer;
+  transition:.13s;user-select:none;
+}
+.reaction:hover{border-color:var(--bordure-2)}
+.reaction.mienne{background:var(--voile);border-color:var(--accent)}
+.reaction .n{color:var(--txt-doux);font-size:12px;font-weight:600}
+.reaction.mienne .n{color:var(--accent-clair)}
+
+.barre-reaction{
+  position:absolute;right:16px;top:-14px;display:none;gap:2px;
+  background:var(--canaux);border:1px solid var(--bordure);
+  border-radius:10px;padding:3px;box-shadow:0 6px 20px rgba(0,0,0,.45);z-index:5;
+}
+.msg:hover .barre-reaction{display:flex}
+.barre-reaction button{
+  width:28px;height:28px;border:none;background:none;border-radius:7px;
+  font-size:15px;cursor:pointer;transition:.12s;
+}
+.barre-reaction button:hover{background:var(--hover);transform:scale(1.15)}
+
+/* ─────────── pièce jointe ─────────── */
+.pj{max-width:420px;border-radius:12px;margin-top:6px;display:block;border:1px solid var(--bordure)}
+.pj-video{width:100%;border-radius:12px}
+
+/* ─────────── boutons de la zone de saisie ─────────── */
+.saisie .outil{
+  width:30px;height:30px;border-radius:50%;flex:none;border:none;
+  background:none;color:var(--txt-doux);cursor:pointer;font-size:19px;
+  display:flex;align-items:center;justify-content:center;transition:.14s;
+}
+.saisie .outil:hover{background:var(--hover);color:var(--txt)}
+
+/* ─────────── panneau de profil (bannière + couleur, Nitro chez Discord) ─────────── */
+.profil{
+  position:fixed;left:86px;bottom:64px;width:290px;z-index:40;
+  background:var(--canaux);border:1px solid var(--bordure);border-radius:16px;
+  overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);display:none;
+}
+.profil.ouvert{display:block}
+.profil .banniere{
+  height:74px;background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
+  background-size:cover;background-position:center;
+}
+.profil .contenu{padding:0 16px 16px;margin-top:-24px}
+.profil .avatar.gros{border:3px solid var(--canaux)}
+.profil h4{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;margin:8px 0 2px}
+.profil .sous-titre{font-size:12px;color:var(--txt-doux);margin-bottom:14px}
+.profil .etiquette{
+  font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--txt-faible);margin:12px 0 7px;
+}
+.profil .couleurs{display:flex;gap:7px;flex-wrap:wrap}
+.profil .pastille{
+  width:26px;height:26px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;transition:.14s;
+}
+.profil .pastille:hover{transform:scale(1.14)}
+.profil .pastille.actif{border-color:#fff}
+.profil .ligne-banniere{display:flex;gap:7px;align-items:center}
+.profil .ligne-banniere input{
+  flex:1;background:var(--saisie);border:1px solid var(--bordure);
+  border-radius:9px;padding:8px 11px;color:var(--txt);font-size:12.5px;
+  font-family:inherit;outline:none;
+}
+.profil .note-gratuit{
+  font-size:11px;color:var(--accent-clair);margin-top:12px;
+  padding-top:11px;border-top:1px solid var(--bordure);line-height:1.45;
+}
+
+/* ─────────── divers ─────────── */
+.ecrit{font-size:12px;color:var(--txt-doux);padding:0 18px 4px;height:17px;font-style:italic}
+@media (max-width:900px){ .membres{display:none} }
+@media (max-width:700px){ .canaux{position:absolute;left:76px;top:0;bottom:0;z-index:20;transform:translateX(-110%);transition:.2s}
+  .canaux.ouvert{transform:none} .rail{width:60px} }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ══ 1. rail des serveurs ══ -->
+  <nav class="rail">
+    <div class="serveur actif" title="Plasma">P</div>
+    <div class="sep"></div>
+    <div class="serveur plus" title="Ajouter un serveur">+</div>
+  </nav>
+
+  <!-- ══ 2. canaux ══ -->
+  <aside class="canaux">
+    <div class="entete-serveur">
+      <div class="nom-serveur">Plasma<span class="chevron">⌄</span></div>
+    </div>
+    <div class="liste-canaux" id="canaux"></div>
+    <div class="moi">
+      <div class="avatar" id="moi-avatar">?<span class="point"></span></div>
+      <div class="qui">
+        <div class="pseudo" id="moi-pseudo">—</div>
+        <div class="statut">en ligne</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ 3. le chat ══ -->
+  <main class="chat">
+    <header class="entete-canal">
+      <div class="titre-canal"><span class="diese">#</span><span id="titre-canal">général</span></div>
+      <div class="sous" id="sous-titre">le point de départ</div>
+      <div class="outils"><span title="Rechercher">⌕</span><span title="Membres">☺</span></div>
+    </header>
+
+    <div class="flux" id="flux"></div>
+    <div class="ecrit" id="ecrit"></div>
+
+    <div class="zone">
+      <div class="saisie">
+        <button class="outil" id="joindre" title="Joindre un fichier (jusqu'à 500 Mo, gratuit)">＋</button>
+        <input id="champ" placeholder="Écrire dans #général…" autocomplete="off" maxlength="4000">
+        <button class="rond-btn" id="envoyer" title="Envoyer">↑</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt-faible);padding:7px 4px 0">
+        4000 caractères · fichiers 500 Mo · réactions · couleurs — tout gratuit
+      </div>
+    </div>
+  </main>
+
+  <!-- ══ 4. membres ══ -->
+  <aside class="membres">
+    <h3 id="titre-membres">En ligne — 0</h3>
+    <div id="liste-membres"></div>
+  </aside>
+</div>
+
+<!-- écran de connexion -->
+<div class="voile" id="voile">
+  <div class="carte">
+    <div class="marque">P</div>
+    <h1>Bienvenue sur Plasma</h1>
+    <p>Le chat de la communauté FuraxDev.<br>Choisis un pseudo, on s'occupe du reste.</p>
+    <input id="pseudo" placeholder="Ton pseudo" maxlength="24" autocomplete="off">
+    <button id="entrer">Entrer</button>
+    <p class="note">Pas de mot de passe. Prends juste le même pseudo à chaque fois.</p>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════ */
+let ws, moi = null, canalActif = "c1", serveur = null;
+let messages = {}, premierMessage = true;
+
+const $ = id => document.getElementById(id);
+const flux = $("flux");
+
+function heure(ts){
+  return new Date(ts).toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+}
+function echappe(t){
+  return t.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function enrichi(t){
+  // les @pseudo deviennent des mentions
+  return echappe(t).replace(/@([\w.-]{2,24})/g, '<span class="mention">@$1</span>');
+}
+function initiale(nom){ return (nom || "?").trim().charAt(0).toUpperCase(); }
+
+/* ── la connexion ── */
+function connecter(pseudo){
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+
+  ws.onopen = () => ws.send(JSON.stringify({ type: "rejoindre", pseudo }));
+
+  ws.onmessage = (e) => {
+    const d = JSON.parse(e.data);
+
+    if (d.type === "init"){
+      serveur = d.serveur;
+      messages = d.messages;
+      dessineCanaux();
+      dessineMembres(d.membres);
+      dessineCanal(canalActif);
+    }
+
+    if (d.type === "connecte"){
+      moi = d.moi;
+      $("voile").classList.add("cache");
+      $("moi-pseudo").textContent = moi.pseudo;
+      const av = $("moi-avatar");
+      av.style.background = moi.couleur;
+      av.innerHTML = initiale(moi.pseudo) + '<span class="point"></span>';
+      $("champ").focus();
+    }
+
+    if (d.type === "message"){
+      const m = d.msg;
+      canalActif = m.canalId;
+      if (m.canalId === canalActif && !$("voile").classList.contains("cache")){
+        ajouteMessage(m);
+      }
+    }
+
+    if (d.type === "historique"){
+      canalActif = d.canalId;
+      dessineCanal(canalActif, d.messages);
+    }
+
+    if (d.type === "membres") dessineMembres(d.liste);
+
+    if (d.type === "reactions") dessineReactions(d.messageId, d.reactions);
+
+    if (d.type === "moi-maj"){
+      if (d.couleur) moi.couleur = d.couleur;
+      if (d.banniere !== undefined) moi.banniere = d.banniere;
+    }
+
+    if (d.type === "emojis") emojisPerso = d.emojis;
+
+    if (d.type === "ecrit" && d.canalId === canalActif && d.pseudo !== (moi && moi.pseudo)){
+      $("ecrit").textContent = `${d.pseudo} est en train d'écrire…`;
+      clearTimeout(window.__ecritT);
+      window.__ecritT = setTimeout(() => $("ecrit").textContent = "", 2200);
+    }
+  };
+
+  ws.onclose = () => {
+    $("voile").classList.remove("cache");
+    $("ecrit").textContent = "connexion perdue — recharge la page";
+  };
+}
+
+/* ── l'affichage ── */
+function dessineCanaux(){
+  const box = $("canaux");
+  const cats = {};
+  for (const c of serveur.canaux) (cats[c.categorie] ||= []).push(c);
+
+  box.innerHTML = Object.entries(cats).map(([cat, canaux]) => `
+    <div class="groupe-categorie">${cat}</div>
+    ${canaux.map(c => `
+      <div class="canal ${c.id === canalActif ? "actif" : ""}" data-id="${c.id}">
+        <span class="diese">#</span><span>${c.nom}</span>
+      </div>`).join("")}
+  `).join("");
+
+  box.querySelectorAll(".canal").forEach(el => {
+    el.onclick = () => {
+      const id = el.dataset.id;
+      if (id === canalActif) return;
+      box.querySelectorAll(".canal").forEach(x => x.classList.remove("actif"));
+      el.classList.add("actif");
+      el.classList.remove("non-lu");
+      ws.send(JSON.stringify({ type: "canal", canalId: id }));
+      $("champ").placeholder = `Écrire dans #${el.textContent.trim()}…`;
+    };
+  });
+}
+
+function dessineCanal(id, historique){
+  const canal = serveur.canaux.find(c => c.id === id);
+  if (canal){
+    $("titre-canal").textContent = canal.nom;
+    $("sous-titre").textContent = canal.id === "c1" ? "le point de départ" : "";
+    $("champ").placeholder = `Écrire dans #${canal.nom}…`;
+  }
+
+  const liste = historique || messages[id] || [];
+  flux.innerHTML = `
+    <div class="debut">
+      <div class="rond">#</div>
+      <h2>Bienvenue dans #${canal ? canal.nom : ""}</h2>
+      <p>Le début de ce canal. Sois sympa, écris en français, et n'oublie pas que quelqu'un te lit.</p>
+    </div>`;
+  premierMessage = true;
+  for (const m of liste) ajouteMessage(m, false);
+  flux.scrollTop = flux.scrollHeight;
+}
+
+function ajouteMessage(m, defiler = true){
+  if (!messages[m.canalId]) messages[m.canalId] = [];
+
+  // on fabrique la ligne
+  const div = document.createElement("div");
+  div.className = "msg" + (premierMessage ? " groupe" : "");
+  premierMessage = false;
+
+  const couleur = m.couleur || "#8a79ff";
+  let pj = "";
+  if (m.fichier) {
+    const u = m.fichier.url || m.fichier;
+    const estImage = /\.(png|jpe?g|gif|webp)$/i.test(u);
+    const estVideo = /\.(mp4|webm)$/i.test(u);
+    if (estImage) pj = `<a href="${u}" target="_blank"><img class="pj" src="${u}" alt=""></a>`;
+    else if (estVideo) pj = `<video class="pj-video" src="${u}" controls></video>`;
+    else pj = `<a class="pj" style="padding:10px 13px;color:var(--accent-clair);text-decoration:none;display:inline-block"
+               href="${u}" target="_blank">📎 ${echappe(m.fichier.nom || "fichier")}</a>`;
+  }
+  div.dataset.msg = m.id;
+  div.innerHTML = `
+    <div class="avatar" style="background:${couleur}">${initiale(m.pseudo)}</div>
+    <div class="corps">
+      <div class="ligne">
+        <span class="auteur" style="color:${couleur}">${echappe(m.pseudo)}</span>
+        <span class="heure">${heure(m.date)}</span>
+      </div>
+      <div class="texte">${enrichi(m.texte)}</div>
+      ${pj}
+      <div class="reactions" data-reactions="${m.id}"></div>
+    </div>
+    <div class="barre-reaction">
+      ${["👍","🔥","😂","💜","😮","🎉"].map(e =>
+        `<button data-react="${e}" title="Réagir ${e}">${e}</button>`).join("")}
+    </div>`;
+  div.querySelectorAll("[data-react]").forEach(b => {
+    b.onclick = (ev) => {
+      ev.stopPropagation();
+      ws.send(JSON.stringify({ type: "reaction", messageId: m.id,
+                               canalId: m.canalId || canalActif, emoji: b.dataset.react }));
+    };
+  });
+  flux.appendChild(div);
+  dessineReactions(m.id, m.reactions || {});
+
+  if (defiler) flux.scrollTop = flux.scrollHeight;
+}
+
+function dessineReactions(messageId, reactions){
+  const box = flux.querySelector(`[data-reactions="${messageId}"]`);
+  if (!box) return;
+  const entrees = Object.entries(reactions || {});
+  if (!entrees.length){ box.innerHTML = ""; return; }
+  box.innerHTML = entrees.map(([emoji, qui]) => {
+    const mienne = moi && qui.includes(moi.id);
+    return `<div class="reaction ${mienne ? "mienne" : ""}" data-react="${emoji}"
+              title="${qui.length} personne(s)">${emoji}<span class="n">${qui.length}</span></div>`;
+  }).join("");
+  box.querySelectorAll(".reaction").forEach(el => {
+    el.onclick = () => ws.send(JSON.stringify({ type: "reaction",
+      messageId, canalId: canalActif, emoji: el.dataset.react }));
+  });
+}
+
+function dessineMembres(liste){
+  $("titre-membres").textContent = `En ligne — ${liste.length}`;
+  $("liste-membres").innerHTML = liste.map(u => `
+    <div class="membre">
+      <div class="avatar" style="background:${u.couleur || "#8a79ff"}">${initiale(u.pseudo)}</div>
+      <div class="nom ${moi && u.id === moi.id ? "soi" : ""}">${echappe(u.pseudo)}${moi && u.id === moi.id ? " (toi)" : ""}</div>
+    </div>`).join("");
+}
+
+/* ── l'envoi ── */
+function envoyer(){
+  const champ = $("champ");
+  const texte = champ.value.trim();
+  if (!texte || !ws || ws.readyState !== 1) return;
+  ws.send(JSON.stringify({ type: "message", texte, canalId: canalActif }));
+  champ.value = "";
+  champ.focus();
+}
+
+$("envoyer").onclick = envoyer;
+$("champ").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); envoyer(); }
+});
+let dernierEcrit = 0;
+$("champ").addEventListener("input", () => {
+  const now = Date.now();
+  if (now - dernierEcrit > 1800 && ws && ws.readyState === 1){
+    dernierEcrit = now;
+    ws.send(JSON.stringify({ type: "ecrit", canalId: canalActif }));
+  }
+});
+
+/* ── l'entrée ── */
+function entrer(){
+  const p = $("pseudo").value.trim();
+  if (!p){ $("pseudo").focus(); return; }
+  localStorage.setItem("plasma_pseudo", p);
+  connecter(p);
+}
+$("entrer").onclick = entrer;
+$("pseudo").addEventListener("keydown", e => { if (e.key === "Enter") entrer(); });
+
+/* ── joindre un fichier : 500 Mo, gratuit ── */
+let emojisPerso = {};
+const champFichier = document.createElement("input");
+champFichier.type = "file";
+champFichier.style.display = "none";
+document.body.appendChild(champFichier);
+
+$("joindre").onclick = () => champFichier.click();
+champFichier.onchange = async () => {
+  const f = champFichier.files[0];
+  if (!f) return;
+  champFichier.value = "";
+  $("ecrit").textContent = `envoi de ${f.name} (${(f.size/1024/1024).toFixed(1)} Mo)…`;
+  try {
+    const r = await fetch("/upload", {
+      method: "POST",
+      headers: { "X-Nom-Fichier": encodeURIComponent(f.name), "Content-Type": "application/octet-stream" },
+      body: f,
+    });
+    const d = await r.json();
+    ws.send(JSON.stringify({ type: "message", texte: "", canalId: canalActif,
+                             fichier: { url: d.url, nom: f.name, taille: f.size } }));
+  } catch (e) {
+    $("ecrit").textContent = "envoi impossible : " + e.message;
+  }
+};
+
+/* ── le panneau de profil : couleur et bannière, gratuits ── */
+const panneau = document.createElement("div");
+panneau.className = "profil";
+panneau.innerHTML = `
+  <div class="banniere" id="p-banniere"></div>
+  <div class="contenu">
+    <div class="avatar gros" id="p-avatar">?</div>
+    <h4 id="p-nom">—</h4>
+    <div class="sous-titre">en ligne</div>
+    <div class="etiquette">Couleur de ton pseudo</div>
+    <div class="couleurs" id="p-couleurs">
+      ${["#8a79ff","#eb459e","#ed4245","#fee75c","#57f287","#00a8fc","#f47fff","#ff8a3d"]
+        .map(c => `<div class="pastille" data-c="${c}" style="background:${c}"></div>`).join("")}
+    </div>
+    <div class="etiquette">Bannière (URL d'image)</div>
+    <div class="ligne-banniere">
+      <input id="p-url" placeholder="https://…">
+      <button class="pastille" id="p-ok" style="background:var(--accent);border-radius:9px;width:38px">✓</button>
+    </div>
+    <p class="note-gratuit">
+      Ces deux réglages sont payants sur Discord (Nitro). Ici ils sont gratuits,
+      comme les réactions, les 4000 caractères et les fichiers de 500 Mo.
+    </p>
+  </div>`;
+document.body.appendChild(panneau);
+
+function majProfil(){
+  if (!moi) return;
+  $("p-nom").textContent = moi.pseudo;
+  const av = $("p-avatar");
+  av.style.background = moi.couleur || "#8a79ff";
+  av.textContent = initiale(moi.pseudo);
+  $("p-banniere").style.backgroundImage = moi.banniere ? `url(${moi.banniere})` : "";
+  panneau.querySelectorAll(".pastille[data-c]").forEach(x =>
+    x.classList.toggle("actif", x.dataset.c === moi.couleur));
+}
+document.querySelector(".moi").onclick = () => { majProfil(); panneau.classList.toggle("ouvert"); };
+panneau.querySelectorAll(".pastille[data-c]").forEach(x => {
+  x.onclick = () => {
+    moi.couleur = x.dataset.c;
+    ws.send(JSON.stringify({ type: "couleur", couleur: x.dataset.c }));
+    majProfil();
+    const a = $("moi-avatar");
+    a.style.background = x.dataset.c;
+    a.innerHTML = initiale(moi.pseudo) + '<span class="point"></span>';
+  };
+});
+$("p-ok").onclick = () => {
+  const u = $("p-url").value.trim();
+  moi.banniere = u || null;
+  ws.send(JSON.stringify({ type: "banniere", url: u }));
+  majProfil();
+};
+document.addEventListener("click", (e) => {
+  if (!panneau.contains(e.target) && !document.querySelector(".moi").contains(e.target))
+    panneau.classList.remove("ouvert");
+});
+
+const memo = localStorage.getItem("plasma_pseudo");
+if (memo) $("pseudo").value = memo;
+$("pseudo").focus();
+</script>
+</body>
+</html>
