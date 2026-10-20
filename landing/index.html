@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Plasma — le chat de la communauté</title>
 <meta name="description" content="Plasma, un chat temps réel. Même interface que Discord, et gratuit pour ce que Discord fait payer.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%238a79ff'/><circle cx='12' cy='12' r='3' fill='white'/><circle cx='20' cy='12' r='3' fill='white'/></svg>">
+<link rel="icon" href="https://plasma-chat.vercel.app/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -13,8 +15,8 @@
   --fond:#131315; --carte:#18181c; --carte-2:#1e1e24;
   --bordure:#26262e; --bordure-2:#33333d;
   --txt:#f0efec; --txt-doux:#9195a3; --txt-faible:#63666f;
-  --accent:#8a79ff; --accent-clair:#a394ff; --accent-sombre:#6b5bf5;
-  --voile:#241f3d; --ok:#3dd68c;
+  --accent:#f48a34; --accent-clair:#ffb066; --accent-sombre:#e07a24;
+  --voile:#3a2410; --ok:#3dd68c;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -30,7 +32,7 @@ body::before,body::after{
   content:"";position:fixed;border-radius:50%;pointer-events:none;z-index:0;
   filter:blur(110px);opacity:.5;
 }
-body::before{width:640px;height:640px;background:#6b5bf5;top:-260px;right:-180px;}
+body::before{width:640px;height:640px;background:#e07a24;top:-260px;right:-180px;}
 body::after{width:520px;height:520px;background:#3d2f7a;bottom:-280px;left:-160px;}
 
 .graine{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.22;
@@ -45,7 +47,7 @@ header{display:flex;align-items:center;gap:11px;padding:28px 0}
 .logo .brique{
   width:32px;height:32px;border-radius:9px;flex:none;position:relative;
   background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
-  box-shadow:0 5px 18px rgba(138,121,255,.4);
+  box-shadow:0 5px 18px rgba(244,138,52,.4);
 }
 .logo .brique::before,.logo .brique::after{
   content:"";position:absolute;width:8px;height:8px;border-radius:2px;
@@ -91,9 +93,9 @@ header nav a:hover{color:var(--txt);background:var(--carte)}
 }
 .bouton.plein{
   background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
-  color:#fff;box-shadow:0 10px 34px rgba(138,121,255,.36);
+  color:#fff;box-shadow:0 10px 34px rgba(244,138,52,.36);
 }
-.bouton.plein:hover{transform:translateY(-2px);box-shadow:0 14px 42px rgba(138,121,255,.48)}
+.bouton.plein:hover{transform:translateY(-2px);box-shadow:0 14px 42px rgba(244,138,52,.48)}
 .bouton.creux{
   background:var(--carte);color:var(--txt);border:1px solid var(--bordure);
 }

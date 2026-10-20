@@ -4,7 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Plasma</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%238a79ff'/><circle cx='12' cy='12' r='3' fill='white'/><circle cx='20' cy='12' r='3' fill='white'/></svg>">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#131315">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -13,7 +17,7 @@
    rail de serveurs · colonne de canaux · chat · liste des membres ·
    zone de saisie · barre d'utilisateur en bas à gauche.
 
-   La DA, elle, est à nous : fond #131315, accent violet #8a79ff,
+   La DA, elle, est à nous : fond #131315, accent violet #f48a34,
    Outfit pour les titres, Inter pour le texte, bords plus ronds,
    aucune couleur ni police de Discord.
    ══════════════════════════════════════════════════════════════ */
@@ -31,10 +35,10 @@
   --txt-2:#b6b8c2;
   --txt-doux:#9195a3;
   --txt-faible:#63666f;
-  --accent:#8a79ff;
-  --accent-clair:#a394ff;
-  --accent-sombre:#6b5bf5;
-  --voile:#241f3d;
+  --accent:#f48a34;
+  --accent-clair:#ffb066;
+  --accent-sombre:#e07a24;
+  --voile:#3a2410;
   --hover:#1e1e24;
   --actif:#26242f;
   --ok:#3dd68c;
@@ -68,7 +72,7 @@ h1,h2,h3,.nom-serveur,.titre-canal,.groupe-categorie{font-family:'Outfit','Inter
 .serveur.actif{
   border-radius:14px;
   background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
-  box-shadow:0 4px 16px rgba(138,121,255,.32);
+  box-shadow:0 4px 16px rgba(244,138,52,.32);
 }
 .serveur.actif::before{
   content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);
@@ -163,7 +167,7 @@ h1,h2,h3,.nom-serveur,.titre-canal,.groupe-categorie{font-family:'Outfit','Inter
   display:flex;align-items:center;justify-content:center;
   background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
   font-family:'Outfit',sans-serif;font-weight:800;font-size:30px;color:#fff;
-  box-shadow:0 8px 26px rgba(138,121,255,.3);
+  box-shadow:0 8px 26px rgba(244,138,52,.3);
 }
 .debut h2{font-size:29px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px}
 .debut p{color:var(--txt-doux);font-size:15px;line-height:1.5}
@@ -247,7 +251,7 @@ h1,h2,h3,.nom-serveur,.titre-canal,.groupe-categorie{font-family:'Outfit','Inter
   background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
   display:flex;align-items:center;justify-content:center;
   font-family:'Outfit',sans-serif;font-weight:800;font-size:27px;color:#fff;
-  box-shadow:0 10px 32px rgba(138,121,255,.38);position:relative;
+  box-shadow:0 10px 32px rgba(244,138,52,.38);position:relative;
 }
 .carte h1{font-size:25px;font-weight:800;text-align:center;letter-spacing:-.03em;margin-bottom:7px}
 .carte p{font-size:14px;color:var(--txt-doux);text-align:center;line-height:1.5;margin-bottom:22px}
@@ -261,7 +265,7 @@ h1,h2,h3,.nom-serveur,.titre-canal,.groupe-categorie{font-family:'Outfit','Inter
   width:100%;border:none;border-radius:12px;padding:13px;
   background:linear-gradient(150deg,var(--accent),var(--accent-sombre));
   color:#fff;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;
-  cursor:pointer;transition:.15s;box-shadow:0 8px 26px rgba(138,121,255,.3);
+  cursor:pointer;transition:.15s;box-shadow:0 8px 26px rgba(244,138,52,.3);
 }
 .carte button:hover{filter:brightness(1.1);transform:translateY(-1px)}
 .carte .note{font-size:12px;color:var(--txt-faible);text-align:center;margin-top:14px;margin-bottom:0}
@@ -556,7 +560,7 @@ function ajouteMessage(m, defiler = true){
   div.className = "msg" + (premierMessage ? " groupe" : "");
   premierMessage = false;
 
-  const couleur = m.couleur || "#8a79ff";
+  const couleur = m.couleur || "#f48a34";
   let pj = "";
   if (m.fichier) {
     const u = m.fichier.url || m.fichier;
@@ -616,7 +620,7 @@ function dessineMembres(liste){
   $("titre-membres").textContent = `En ligne — ${liste.length}`;
   $("liste-membres").innerHTML = liste.map(u => `
     <div class="membre">
-      <div class="avatar" style="background:${u.couleur || "#8a79ff"}">${initiale(u.pseudo)}</div>
+      <div class="avatar" style="background:${u.couleur || "#f48a34"}">${initiale(u.pseudo)}</div>
       <div class="nom ${moi && u.id === moi.id ? "soi" : ""}">${echappe(u.pseudo)}${moi && u.id === moi.id ? " (toi)" : ""}</div>
     </div>`).join("");
 }
@@ -692,7 +696,7 @@ panneau.innerHTML = `
     <div class="sous-titre">en ligne</div>
     <div class="etiquette">Couleur de ton pseudo</div>
     <div class="couleurs" id="p-couleurs">
-      ${["#8a79ff","#eb459e","#ed4245","#fee75c","#57f287","#00a8fc","#f47fff","#ff8a3d"]
+      ${["#f48a34","#eb459e","#ed4245","#fee75c","#57f287","#00a8fc","#f47fff","#ff8a3d"]
         .map(c => `<div class="pastille" data-c="${c}" style="background:${c}"></div>`).join("")}
     </div>
     <div class="etiquette">Bannière (URL d'image)</div>
@@ -711,7 +715,7 @@ function majProfil(){
   if (!moi) return;
   $("p-nom").textContent = moi.pseudo;
   const av = $("p-avatar");
-  av.style.background = moi.couleur || "#8a79ff";
+  av.style.background = moi.couleur || "#f48a34";
   av.textContent = initiale(moi.pseudo);
   $("p-banniere").style.backgroundImage = moi.banniere ? `url(${moi.banniere})` : "";
   panneau.querySelectorAll(".pastille[data-c]").forEach(x =>

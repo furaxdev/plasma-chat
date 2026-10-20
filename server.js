@@ -62,7 +62,7 @@ const MIME = { ".html":"text/html; charset=utf-8", ".css":"text/css; charset=utf
                ".js":"text/javascript; charset=utf-8", ".png":"image/png", ".jpg":"image/jpeg",
                ".jpeg":"image/jpeg", ".gif":"image/gif", ".webp":"image/webp",
                ".mp4":"video/mp4", ".mp3":"audio/mpeg", ".pdf":"application/pdf",
-               ".svg":"image/svg+xml", ".ico":"image/x-icon", ".txt":"text/plain; charset=utf-8" };
+               ".svg":"image/svg+xml", ".webmanifest":"application/manifest+json", ".ico":"image/x-icon", ".txt":"text/plain; charset=utf-8" };
 
 const serveur = http.createServer((req, res) => {
   // ── upload gratuit (500 Mo)
