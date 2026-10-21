@@ -366,10 +366,83 @@ h1,h2,h3,.nom-serveur,.titre-canal,.groupe-categorie{font-family:'Outfit','Inter
 @media (max-width:900px){ .membres{display:none} }
 @media (max-width:700px){ .canaux{position:absolute;left:76px;top:0;bottom:0;z-index:20;transform:translateX(-110%);transition:.2s}
   .canaux.ouvert{transform:none} .rail{width:60px} }
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE — ecrit apres toutes les autres regles, donc rien ne
+   peut l'ecraser. Desktop inchange.
+   ══════════════════════════════════════════════════════════════ */
+.burger{display:none}
+.voile-tiroir{display:none}
+
+@media (max-width: 768px){
+  /* plus de debordement horizontal */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* 1. le rail disparait : le hamburger le remplace */
+  .rail { display: none !important; }
+  .burger {
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; flex: none; margin-right: 4px;
+    border: none; border-radius: 10px; background: none;
+    color: var(--txt-doux); font-size: 20px; cursor: pointer;
+  }
+  .burger:active { background: var(--hover); color: var(--txt); }
+
+  /* 2. la colonne de canaux devient un tiroir plein ecran */
+  .canaux {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 82%;
+    max-width: 300px; z-index: 60;
+    transform: translateX(-102%); transition: transform .22s ease;
+    box-shadow: 12px 0 40px rgba(0,0,0,.5);
+  }
+  .canaux.ouvert { transform: none; }
+  .voile-tiroir {
+    position: fixed; inset: 0; z-index: 55; background: rgba(8,8,12,.6);
+    backdrop-filter: blur(2px);
+  }
+  .voile-tiroir.ouvert { display: block; }
+
+  /* 3. l'en-tete tient sur une ligne */
+  .entete-canal { padding: 0 10px; gap: 6px; height: 52px; }
+  .titre-canal { font-size: 15px; min-width: 0; }
+  .titre-canal span:last-child {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .entete-canal .sous { display: none; }
+  .entete-canal .outils span { width: 30px; height: 30px; }
+
+  /* 4. la zone de saisie ne deborde plus */
+  .zone { padding: 0 10px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .saisie { padding: 9px 10px; gap: 7px; min-width: 0; }
+  .saisie input { min-width: 0; font-size: 16px; }   /* 16px = pas de zoom iOS */
+  .saisie .outil { width: 32px; height: 32px; font-size: 21px; }
+  .saisie .rond-btn { width: 36px; height: 36px; }
+
+  /* 5. le bloc d'accueil du canal prend moins de place */
+  .debut { padding: 16px 14px 20px; }
+  .debut .rond { width: 52px; height: 52px; font-size: 24px; margin-bottom: 14px; }
+  .debut h2 { font-size: 22px; }
+  .debut p { font-size: 14px; }
+
+  /* 6. les messages respirent */
+  .msg { padding: 3px 12px; gap: 10px; }
+  .flux { padding-top: 12px; }
+  .ecrit { padding: 0 12px 2px; }
+
+  /* 7. la barre d'utilisateur en bas du tiroir */
+  .moi { height: 60px; }
+}
+
+@media (max-width: 380px){
+  .debut h2 { font-size: 20px; }
+  .saisie input { font-size: 15px; }
+  .burger { width: 34px; }
+}
 </style>
 </head>
 <body>
 
+<div class="voile-tiroir" id="voileTiroir"></div>
 <div class="app">
 
   <!-- ══ 1. rail des serveurs ══ -->
@@ -397,6 +470,7 @@ h1,h2,h3,.nom-serveur,.titre-canal,.groupe-categorie{font-family:'Outfit','Inter
   <!-- ══ 3. le chat ══ -->
   <main class="chat">
     <header class="entete-canal">
+      <button class="burger" id="burger" aria-label="Ouvrir les canaux">☰</button>
       <div class="titre-canal"><span class="diese">#</span><span id="titre-canal">général</span></div>
       <div class="sous" id="sous-titre">le point de départ</div>
       <div class="outils"><span title="Rechercher">⌕</span><span title="Membres">☺</span></div>
@@ -524,6 +598,7 @@ function connecter(pseudo, motDePasse, inscription){
       $("entrer").classList.remove("attente");
       localStorage.setItem("plasma_pseudo", moi.pseudo);
       $("voile").classList.add("cache");
+      fermerTiroir();
       $("moi-pseudo").textContent = moi.pseudo;
       const av = $("moi-avatar");
       av.style.background = moi.couleur;
@@ -597,6 +672,7 @@ function dessineCanaux(){
       el.classList.remove("non-lu");
       ws.send(JSON.stringify({ type: "canal", canalId: id }));
       $("champ").placeholder = `Écrire dans #${el.textContent.trim()}…`;
+      fermerTiroir();
     };
   });
 }
@@ -842,6 +918,23 @@ document.addEventListener("click", (e) => {
   if (!panneau.contains(e.target) && !document.querySelector(".moi").contains(e.target))
     panneau.classList.remove("ouvert");
 });
+
+/* ── le tiroir des canaux, sur telephone ── */
+function ouvrirTiroir(){
+  document.querySelector(".canaux").classList.add("ouvert");
+  $("voileTiroir").classList.add("ouvert");
+}
+function fermerTiroir(){
+  document.querySelector(".canaux").classList.remove("ouvert");
+  $("voileTiroir").classList.remove("ouvert");
+}
+if ($("burger")) {
+  $("burger").onclick = (e) => {
+    e.stopPropagation();
+    document.querySelector(".canaux").classList.contains("ouvert") ? fermerTiroir() : ouvrirTiroir();
+  };
+}
+if ($("voileTiroir")) $("voileTiroir").onclick = fermerTiroir;
 
 const memo = localStorage.getItem("plasma_pseudo");
 if (memo) $("pseudo").value = memo;
