@@ -13,6 +13,20 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const { WebSocketServer } = require("ws");
+const crypto = require("crypto");
+
+// ── mots de passe : scrypt + sel, jamais en clair
+function hacher(motDePasse) {
+  const sel = crypto.randomBytes(16).toString("hex");
+  const h = crypto.scryptSync(motDePasse, sel, 32).toString("hex");
+  return `${sel}:${h}`;
+}
+function verifier(motDePasse, enregistre) {
+  if (!enregistre || !enregistre.includes(":")) return false;
+  const [sel, h] = enregistre.split(":");
+  const essai = crypto.scryptSync(motDePasse, sel, 32).toString("hex");
+  return crypto.timingSafeEqual(Buffer.from(h, "hex"), Buffer.from(essai, "hex"));
+}
 
 const PORT = process.env.PORT || 3100;
 const DATA = path.join(__dirname, "donnees.json");
@@ -104,7 +118,7 @@ const serveur = http.createServer((req, res) => {
 // ─────────────────────────────────────────── WebSocket
 const wss = new WebSocketServer({ server: serveur, path: "/ws" });
 const clients = new Map();
-const COULEURS = ["#8a79ff","#eb459e","#ed4245","#fee75c","#57f287","#00a8fc","#f47fff","#ff8a3d"];
+const COULEURS = ["#f48a34","#eb459e","#ed4245","#fee75c","#57f287","#00a8fc","#f47fff","#8a79ff"];
 
 const envoyer = (ws, type, data) => { if (ws.readyState === 1) ws.send(JSON.stringify({ type, ...data })); };
 const diffuser = (type, data, sauf = null) => { for (const [ws] of clients) if (ws !== sauf) envoyer(ws, type, data); };
@@ -130,17 +144,41 @@ wss.on("connection", (ws) => {
 
     switch (m.type) {
       case "rejoindre": {
-        const pseudo = String(m.pseudo || "").trim().slice(0, 24) || "anonyme";
-        const connu = Object.values(etat.utilisateurs).find(u => u.pseudo.toLowerCase() === pseudo.toLowerCase());
-        const uid = connu ? connu.id : id();
-        const couleur = connu ? connu.couleur : COULEURS[Object.keys(etat.utilisateurs).length % COULEURS.length];
-        etat.utilisateurs[uid] = { id: uid, pseudo, couleur,
-                                   banniere: connu ? connu.banniere : null };
-        Object.assign(client, { userId: uid, pseudo, couleur,
-                                banniere: etat.utilisateurs[uid].banniere });
+        const pseudo = String(m.pseudo || "").trim().slice(0, 24);
+        const mdp = String(m.motDePasse || "");
+        if (!pseudo) return envoyer(ws, "refus", { raison: "Choisis un pseudo." });
+        if (mdp.length < 4) return envoyer(ws, "refus", { raison: "Le mot de passe doit faire au moins 4 caractères." });
+
+        const connu = Object.values(etat.utilisateurs)
+          .find(u => u.pseudo.toLowerCase() === pseudo.toLowerCase());
+
+        if (m.inscription) {
+          if (connu) return envoyer(ws, "refus", { raison: "Ce pseudo est déjà pris." });
+          const uid = id();
+          const couleur = COULEURS[Object.keys(etat.utilisateurs).length % COULEURS.length];
+          etat.utilisateurs[uid] = { id: uid, pseudo, couleur, banniere: null,
+                                     motDePasse: hacher(mdp), cree: Date.now() };
+          Object.assign(client, { userId: uid, pseudo, couleur, banniere: null });
+          sauver();
+          envoyer(ws, "connecte", { moi: { id: uid, pseudo, couleur, banniere: null } });
+          diffuserMembres();
+          return;
+        }
+
+        // connexion
+        if (!connu) return envoyer(ws, "refus", { raison: "Ce pseudo n'existe pas. Crée un compte." });
+        // un ancien compte sans mot de passe : le premier qui se connecte le definit
+        if (!connu.motDePasse) {
+          connu.motDePasse = hacher(mdp);
+          sauver();
+        } else if (!verifier(mdp, connu.motDePasse)) {
+          return envoyer(ws, "refus", { raison: "Mot de passe incorrect." });
+        }
+        Object.assign(client, { userId: connu.id, pseudo: connu.pseudo,
+                                couleur: connu.couleur, banniere: connu.banniere || null });
         sauver();
-        envoyer(ws, "connecte", { moi: { id: uid, pseudo, couleur,
-                                         banniere: client.banniere } });
+        envoyer(ws, "connecte", { moi: { id: connu.id, pseudo: connu.pseudo,
+                                         couleur: connu.couleur, banniere: connu.banniere || null } });
         diffuserMembres();
         break;
       }

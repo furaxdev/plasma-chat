@@ -345,6 +345,22 @@ h1,h2,h3,.nom-serveur,.titre-canal,.groupe-categorie{font-family:'Outfit','Inter
   padding-top:11px;border-top:1px solid var(--bordure);line-height:1.45;
 }
 
+
+.onglets{display:flex;gap:6px;background:var(--saisie);border-radius:12px;padding:4px;margin-bottom:14px}
+.onglet{
+  flex:1;border:none;background:none;border-radius:9px;padding:9px;
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;
+  color:var(--txt-doux);cursor:pointer;transition:.15s;
+}
+.onglet:hover{color:var(--txt)}
+.onglet.actif{background:var(--accent);color:#fff;box-shadow:0 3px 12px rgba(244,138,52,.32)}
+.erreur{
+  font-size:13px;color:#ff8a95;text-align:center;
+  min-height:18px;margin-bottom:10px;line-height:1.4;
+}
+.erreur.hors-ligne{color:var(--accent-clair)}
+.carte .attente{opacity:.6;pointer-events:none}
+
 /* ─────────── divers ─────────── */
 .ecrit{font-size:12px;color:var(--txt-doux);padding:0 18px 4px;height:17px;font-style:italic}
 @media (max-width:900px){ .membres{display:none} }
@@ -412,11 +428,20 @@ h1,h2,h3,.nom-serveur,.titre-canal,.groupe-categorie{font-family:'Outfit','Inter
 <div class="voile" id="voile">
   <div class="carte">
     <div class="marque">P</div>
-    <h1>Bienvenue sur Plasma</h1>
-    <p>Le chat de la communauté FuraxDev.<br>Choisis un pseudo, on s'occupe du reste.</p>
-    <input id="pseudo" placeholder="Ton pseudo" maxlength="24" autocomplete="off">
+    <h1 id="titre-auth">Bienvenue sur Plasma</h1>
+    <p id="sous-auth">Le chat de la communauté FuraxDev.</p>
+
+    <div class="onglets">
+      <button class="onglet actif" data-mode="connexion">Connexion</button>
+      <button class="onglet" data-mode="inscription">Inscription</button>
+    </div>
+
+    <input id="pseudo" placeholder="Ton pseudo" maxlength="24" autocomplete="username">
+    <input id="mdp" type="password" placeholder="Mot de passe" autocomplete="current-password">
+
+    <div class="erreur" id="erreur"></div>
     <button id="entrer">Entrer</button>
-    <p class="note">Pas de mot de passe. Prends juste le même pseudo à chaque fois.</p>
+    <p class="note" id="note-auth">Prends le même pseudo à chaque fois.</p>
   </div>
 </div>
 
@@ -426,6 +451,12 @@ let ws, moi = null, canalActif = "c1", serveur = null;
 let messages = {}, premierMessage = true;
 
 const $ = id => document.getElementById(id);
+
+// le serveur peut etre ailleurs que la page (front sur Vercel, serveur sur Render)
+function baseServeur(){
+  const hote = (window.PLASMA_SERVEUR || "").trim();
+  return hote ? "https://" + hote : "";
+}
 const flux = $("flux");
 
 function heure(ts){
@@ -438,14 +469,42 @@ function enrichi(t){
   // les @pseudo deviennent des mentions
   return echappe(t).replace(/@([\w.-]{2,24})/g, '<span class="mention">@$1</span>');
 }
+function direErreur(texte, horsLigne){
+  const e = $("erreur");
+  if (!e) return;
+  e.textContent = texte || "";
+  e.classList.toggle("hors-ligne", !!horsLigne);
+}
+
 function initiale(nom){ return (nom || "?").trim().charAt(0).toUpperCase(); }
 
 /* ── la connexion ── */
-function connecter(pseudo){
-  const proto = location.protocol === "https:" ? "wss" : "ws";
-  ws = new WebSocket(`${proto}://${location.host}/ws`);
+function connecter(pseudo, motDePasse, inscription){
+  // le front peut etre servi par Vercel, le serveur tourner sur Render
+  const hote = (window.PLASMA_SERVEUR || "").trim() || location.host;
+  const local = /^(localhost|127\.|0\.0\.0\.0|\[)/.test(hote);
+  const proto = local ? "ws" : "wss";
 
-  ws.onopen = () => ws.send(JSON.stringify({ type: "rejoindre", pseudo }));
+  direErreur("connexion au serveur…", true);
+
+  try {
+    ws = new WebSocket(`${proto}://${hote}/ws`);
+  } catch (e) {
+    direErreur("Adresse du serveur invalide.");
+    $("entrer").classList.remove("attente");
+    return;
+  }
+
+  ws.onopen = () => {
+    direErreur("");
+    ws.send(JSON.stringify({ type: "rejoindre", pseudo, motDePasse, inscription }));
+  };
+
+  ws.onerror = () => {
+    direErreur("Le serveur ne repond pas (" + hote + "). Il n'est pas encore deploye sur Render — le chat s'ouvrira des qu'il le sera.", true);
+    $("entrer").classList.remove("attente");
+    $("entrer").textContent = mode === "inscription" ? "Créer mon compte" : "Entrer";
+  };
 
   ws.onmessage = (e) => {
     const d = JSON.parse(e.data);
@@ -460,6 +519,9 @@ function connecter(pseudo){
 
     if (d.type === "connecte"){
       moi = d.moi;
+      direErreur("");
+      $("entrer").classList.remove("attente");
+      localStorage.setItem("plasma_pseudo", moi.pseudo);
       $("voile").classList.add("cache");
       $("moi-pseudo").textContent = moi.pseudo;
       const av = $("moi-avatar");
@@ -479,6 +541,12 @@ function connecter(pseudo){
     if (d.type === "historique"){
       canalActif = d.canalId;
       dessineCanal(canalActif, d.messages);
+    }
+
+    if (d.type === "refus"){
+      direErreur(d.raison || "Refusé.");
+      $("entrer").classList.remove("attente");
+      try { ws.close(); } catch (e) {}
     }
 
     if (d.type === "membres") dessineMembres(d.liste);
@@ -649,14 +717,45 @@ $("champ").addEventListener("input", () => {
 });
 
 /* ── l'entrée ── */
+let mode = "connexion";
+
+function choisirMode(nouveau){
+  mode = nouveau;
+  document.querySelectorAll(".onglet").forEach(o =>
+    o.classList.toggle("actif", o.dataset.mode === mode));
+  $("titre-auth").textContent = mode === "inscription" ? "Créer un compte" : "Content de te revoir";
+  $("sous-auth").innerHTML = mode === "inscription"
+    ? "Un pseudo, un mot de passe, et c'est tout."
+    : "Entre ton pseudo et ton mot de passe.";
+  $("note-auth").textContent = mode === "inscription"
+    ? "Ton mot de passe est chiffré sur le serveur. Personne ne le voit."
+    : "Le même pseudo et le même mot de passe qu'à l'inscription.";
+  $("entrer").textContent = mode === "inscription" ? "Créer mon compte" : "Entrer";
+  $("mdp").autocomplete = mode === "inscription" ? "new-password" : "current-password";
+  direErreur("");
+}
+
 function entrer(){
   const p = $("pseudo").value.trim();
-  if (!p){ $("pseudo").focus(); return; }
-  localStorage.setItem("plasma_pseudo", p);
-  connecter(p);
+  const m = $("mdp").value;
+  direErreur("");
+  if (!p){ direErreur("Choisis un pseudo."); $("pseudo").focus(); return; }
+  if (m.length < 4){ direErreur("Le mot de passe doit faire au moins 4 caractères."); $("mdp").focus(); return; }
+  $("entrer").classList.add("attente");
+  $("entrer").textContent = "Connexion…";
+  connecter(p, m, mode === "inscription");
 }
 $("entrer").onclick = entrer;
-$("pseudo").addEventListener("keydown", e => { if (e.key === "Enter") entrer(); });
+$("pseudo").addEventListener("keydown", e => { if (e.key === "Enter") $("mdp").focus(); });
+$("mdp").addEventListener("keydown", e => { if (e.key === "Enter") entrer(); });
+document.querySelectorAll(".onglet").forEach(o => {
+  o.onclick = () => choisirMode(o.dataset.mode);
+});
+$("mdp").addEventListener("input", () => {
+  const b = $("entrer");
+  if (b.classList.contains("attente")) return;
+});
+choisirMode("connexion");
 
 /* ── joindre un fichier : 500 Mo, gratuit ── */
 let emojisPerso = {};
@@ -672,7 +771,7 @@ champFichier.onchange = async () => {
   champFichier.value = "";
   $("ecrit").textContent = `envoi de ${f.name} (${(f.size/1024/1024).toFixed(1)} Mo)…`;
   try {
-    const r = await fetch("/upload", {
+    const r = await fetch(`${baseServeur()}/upload`, {
       method: "POST",
       headers: { "X-Nom-Fichier": encodeURIComponent(f.name), "Content-Type": "application/octet-stream" },
       body: f,
